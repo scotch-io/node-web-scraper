@@ -15,26 +15,26 @@ app.get('/scrape', function(req, res){
 			var title, release, rating;
 			var json = { title : "", release : "", rating : ""};
 
-			$('.header').filter(function(){
+			$('.title_wrapper').filter(function(){
 		        var data = $(this);
 		        title = data.children().first().text();
-		        release = data.children().last().children().text();
+		        release = data.children().last().children().last().text();
 
 		        json.title = title;
 		        json.release = release;
 	        })
 
-	        $('.star-box-giga-star').filter(function(){
+	        $('.ratingValue').filter(function(){
 	        	var data = $(this);
 	        	rating = data.text();
 
 	        	json.rating = rating;
 	        })
-		}
-
 		fs.writeFile('output.json', JSON.stringify(json, null, 4), function(err){
         	console.log('File successfully written! - Check your project directory for the output.json file');
         })
+		}
+
 
         res.send('Check your console!')
 	})
