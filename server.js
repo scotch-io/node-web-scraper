@@ -18,7 +18,7 @@ app.get('/scrape', function(req, res){
 			$('.title_wrapper').filter(function(){
 		        var data = $(this);
 		        title = data.children().first().text().trim();
-		        release = data.children().last().children().text().trim();
+		        release = data.children().last().children().last().text().trim();
 
 		        json.title = title;
 		        json.release = release;
