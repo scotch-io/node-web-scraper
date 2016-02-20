@@ -4,6 +4,10 @@
   "description"  : "Scrape le web.",
   "main"         : "server.js",
   "author"       : "Scotch",
+  "repository"   : {
+    "type" : "git",
+    "url"  : "https://github.com/scotch-io/node-web-scraper"
+  },
   "dependencies" : {
     "express"    : "latest",
     "request"    : "latest",
