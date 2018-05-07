@@ -8,7 +8,10 @@ app.get('/scrape', function(req, res){
   // Let's scrape Anchorman 2
   url = 'http://www.imdb.com/title/tt1229340/';
 
-  request(url, function(error, response, html){
+  request({
+      url : url,
+      rejectUnauthorized : false
+	    }, function(error, response, html){
     if(!error){
       var $ = cheerio.load(html);
 
