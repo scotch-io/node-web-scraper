@@ -1,42 +1,75 @@
-var express = require('express');
-var fs      = require('fs');
-var request = require('request');
-var cheerio = require('cheerio');
-var app     = express();
+const express = require('express');
+const fs      = require('fs');
+const request = require('request');
+const cheerio = require('cheerio');
+const _ = require('lodash');
+let jsonframe = require('jsonframe-cheerio');
+const app     = express();
 
-app.get('/scrape', function(req, res){
-  // Let's scrape Anchorman 2
-  url = 'http://www.imdb.com/title/tt1229340/';
+app.get('/wikipedia-school-shootings', function(req, res){
+  const url = 'https://en.wikipedia.org/wiki/List_of_school_shootings_in_the_United_States';
 
   request(url, function(error, response, html){
-    if(!error){
-      var $ = cheerio.load(html);
+    if(!error) {
+      let $ = cheerio.load(html);
+      jsonframe($); // initializes the plugin
 
-      var title, release, rating;
-      var json = { title : "", release : "", rating : ""};
+      let frame = {
+        school_shootings: {
+          _s: ".wikitable tbody tr",  // the selector
+          _d: [{  // allow you to get an array of data, not just the first item
+            "date": "td:nth-child(1)",
+            "location": "td:nth-child(2)",
+            "deaths": "td:nth-child(3)",
+            "injuries": "td:nth-child(4)",
+            "description": "td:nth-child(5)",
+          }]
+        }
+      }
 
-      $('.title_wrapper').filter(function(){
-        var data = $(this);
-        title = data.children().first().text().trim();
-        release = data.children().last().children().last().text().trim();
+      const unparsed = $('#bodyContent').scrape(frame, { /* string: true */ });
 
-        json.title = title;
-        json.release = release;
-      })
+      // Clean the output and reformat a few fields
+      const json = _.isArray(_.get(unparsed, 'school_shootings'))
+        ? unparsed.school_shootings.reduce((acc, { deaths, injuries, description, ...rest }) => {
+          if (
+            !_.isNil(description)
+            && !_.isNil(deaths)
+          ) {
+            // remove the citation brackets e.g. [145]
+            // https://regex101.com/r/JTEb0z/1
+            // TODO: parse the citation links and parse them to a new field so we can add
+            // TODO:   a direct link to any records
+            const parseDescrption = description.replace(/\[.+?\]\s*/gm, '');
 
-      $('.ratingValue').filter(function(){
-        var data = $(this);
-        rating = data.text().trim();
+            // remove (including perpetrator) from some entries to retrieve numeric values
+            // and set booleans to indicate whether the perp died or was injured in the shooting
+            // https://regex101.com/r/4TLSb2/1
+            const regex = / \(.+?perpetrator\)\s*/gm;
+            const parseDeaths = deaths.replace(regex, '')
+            const perpetrator_died = regex.exec(deaths) !== null;
+            const parseInjuries = injuries.replace(regex, '')
+            const perpetrator_injured = regex.exec(injuries) !== null;
 
-        json.rating = rating;
-      })
+            acc.push({
+              ...rest,
+              deaths: parseDeaths,
+              perpetrator_died,
+              injuries: parseInjuries,
+              perpetrator_injured,
+              description: parseDescrption,
+            });
+          }
+          return acc;
+        }, [])
+        : unparsed;
+
+      // fs.writeFile('output.json', JSON.stringify(json, null, 4), function (err) {
+      //   console.log('File successfully written! - Check your project directory for the output.json file');
+      // })
+
+      res.send(JSON.stringify(json, null, 0));
     }
-
-    fs.writeFile('output.json', JSON.stringify(json, null, 4), function(err){
-      console.log('File successfully written! - Check your project directory for the output.json file');
-    })
-
-    res.send('Check your console!')
   })
 })
 
