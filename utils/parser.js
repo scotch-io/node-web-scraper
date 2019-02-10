@@ -38,11 +38,7 @@ exports.parseRequestFromTemplate = function parseRequestFromTemplate(parseTempla
 
     request(url, function respondToParseRequest(error, response, html) {
       if (!error) {
-        res.send(JSON.stringify(
-          parseJSONFrame({ html, ...parseJsonFrameArguments }),
-         null,
-          0),
-        );
+        res.json(parseJSONFrame({ html, ...parseJsonFrameArguments }), null, 0);
       }
     });
   };
