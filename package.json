@@ -5,7 +5,7 @@
   "main": "server.js",
   "author": "Scotch",
   "scripts": {
-    "start": "node server.js"
+    "start": "node bin/www"
   },
   "repository": {
     "type": "git",
