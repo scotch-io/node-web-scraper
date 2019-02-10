@@ -1,4 +1,5 @@
 const { get, isNil, isArray } = require('lodash');
+const { parseDate } = require('chrono-node');
 
 /**
  * remove the citation brackets e.g. [145]
@@ -59,9 +60,10 @@ exports.schoolShootings = {
   postProcessor: function processSchoolShootingsJSON(unparsed) {
     const parseArray = get(unparsed, 'school_shootings');
     return isArray(parseArray)
-    ? parseArray.reduce((acc, { deaths, injuries, description, ...rest }) => {
+    ? parseArray.reduce((acc, { date, deaths, injuries, description, ...rest }) => {
       if (
         !isNil(description)
+        && !isNil(date)
         && !isNil(deaths)
         && !isNil(injuries)
       ) {
@@ -78,6 +80,7 @@ exports.schoolShootings = {
 
         acc.push({
           ...rest,
+          date: parseDate(date),
           deaths: parseDeaths,
           perpetrator_died,
           injuries: parseInjuries,
@@ -120,16 +123,21 @@ exports.massShootingsPre2018 = {
   },
   scrapeOptions: {},
   postProcessor: function processMassShootingsJSON(unparsed) {
+    const firstDayOf2018 = new Date(parseDate("January 1, 2018 12:00 am"));
     const parseArray = get(unparsed, 'mass_shootings_pre_2018');
     return isArray(parseArray)
-      ? parseArray.reduce((acc, { deaths, injuries, description, ...rest }) => {
+      ? parseArray.reduce((acc, { date, deaths, injuries, description, ...rest }) => {
+        const dateFixed = parseDate(date);
         if (
           !isNil(description)
+          && !isNil(date)
+          && (new Date(dateFixed)) < firstDayOf2018
           && !isNil(deaths)
           && !isNil(injuries)
         ) {
           acc.push({
             ...rest,
+            date: dateFixed,
             // deaths, injuries, description,
             deaths: removeCitationBrackets(deaths),
             injuries: removeCitationBrackets(injuries),
