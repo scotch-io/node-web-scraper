@@ -12,6 +12,7 @@
     "url": "https://github.com/scotch-io/node-web-scraper"
   },
   "dependencies": {
+    "all-the-cities": "^2.0.1",
     "cheerio": "latest",
     "chrono-node": "^1.3.11",
     "express": "latest",
