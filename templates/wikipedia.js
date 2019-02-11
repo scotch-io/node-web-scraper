@@ -1,5 +1,6 @@
 const { get, isNil, isArray } = require('lodash');
 const { parseDate } = require('chrono-node');
+const { getUSCityLocation } = require('../utils/geoCodeCity');
 
 /**
  * remove the citation brackets e.g. [145]
@@ -60,7 +61,7 @@ exports.schoolShootings = {
   postProcessor: function processSchoolShootingsJSON(unparsed) {
     const parseArray = get(unparsed, 'school_shootings');
     return isArray(parseArray)
-    ? parseArray.reduce((acc, { date, deaths, injuries, description, ...rest }) => {
+    ? parseArray.reduce((acc, { date, deaths, injuries, description, location, ...rest }) => {
       if (
         !isNil(description)
         && !isNil(date)
@@ -86,6 +87,10 @@ exports.schoolShootings = {
           injuries: parseInjuries,
           perpetrator_injured,
           description: removeCitationBrackets(description),
+          location,
+          geocode_results: {
+            ...getUSCityLocation(location, true),
+          }
         });
       }
       return acc;
@@ -126,7 +131,7 @@ exports.massShootingsPre2018 = {
     const firstDayOf2018 = new Date(parseDate("January 1, 2018 12:00 am"));
     const parseArray = get(unparsed, 'mass_shootings_pre_2018');
     return isArray(parseArray)
-      ? parseArray.reduce((acc, { date, deaths, injuries, description, ...rest }) => {
+      ? parseArray.reduce((acc, { date, deaths, injuries, description, location, ...rest }) => {
         const dateFixed = parseDate(date);
         if (
           !isNil(description)
@@ -142,6 +147,10 @@ exports.massShootingsPre2018 = {
             deaths: removeCitationBrackets(deaths),
             injuries: removeCitationBrackets(injuries),
             description: removeCitationBrackets(description),
+            location,
+            geocode_results: {
+              ...getUSCityLocation(location, true),
+            }
           });
         }
         return acc;
